@@ -1,0 +1,5 @@
+# OpenMontage MCP server extra dependencies
+# Install on top of the base requirements:
+#   pip install -r requirements.txt -r api/requirements-mcp.txt
+
+mcp>=1.0.0
