@@ -323,20 +323,33 @@ class BaseTool(ABC):
 
         On Windows, resolves .cmd/.bat wrappers (e.g. npx, npm) via
         shutil.which() so subprocess.run() can find them without shell=True.
+        For npx specifically we prefer the .cmd wrapper to avoid executing a
+        POSIX shell script on Windows (WinError 193).
         """
         resolved_cmd = list(cmd)
         if platform.system() == "Windows" and resolved_cmd:
-            exe = shutil.which(resolved_cmd[0])
-            if exe:
-                resolved_cmd[0] = exe
+            first = resolved_cmd[0].lower()
+            if first in ("npx", "npm", "node"):
+                for wrapper in (f"{first}.cmd", f"{first}.bat", first):
+                    exe = shutil.which(wrapper)
+                    if exe:
+                        resolved_cmd[0] = exe
+                        break
+            else:
+                exe = shutil.which(resolved_cmd[0])
+                if exe:
+                    resolved_cmd[0] = exe
         return subprocess.run(
             resolved_cmd,
             capture_output=True,
             text=True,
+            encoding="utf-8",
+            errors="replace",
             timeout=timeout,
             cwd=cwd,
             check=True,
         )
+
 
 
 class DependencyError(Exception):

@@ -5,4 +5,5 @@ jsonschema>=4.20
 python-dotenv>=1.0
 Pillow>=10.0
 requests>=2.31
+numpy>=1.24          # required by several tool probes and media helpers
 google-auth>=2.0       # service-account auth for Google TTS + Imagen (Vertex AI)

@@ -213,6 +213,7 @@ def _handle_create_project(args: dict[str, Any]) -> str:
         "project_id": slug,
         "title": title,
         "pipeline": pipeline,
+        "brief": args.get("brief", ""),
         "created_at": datetime.now(timezone.utc).isoformat(),
     }
     with open(project_path / "project.json", "w", encoding="utf-8") as f:

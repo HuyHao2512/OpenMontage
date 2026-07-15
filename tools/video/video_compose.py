@@ -420,7 +420,13 @@ class VideoCompose(BaseTool):
 
         try:
             for i, cut in enumerate(cuts):
-                source = Path(cut["source"])
+                import os
+                source_str = cut["source"]
+                if not os.path.isabs(source_str):
+                    source = output_path.parent.parent / source_str
+                else:
+                    source = Path(source_str)
+                
                 if not source.exists():
                     return ToolResult(success=False, error=f"Cut source not found: {source}")
 
@@ -1311,10 +1317,28 @@ class VideoCompose(BaseTool):
         for cut in props.get("cuts", []):
             source = cut.get("source", "")
             if source and not source.startswith(("http://", "https://", "file://")):
-                resolved = Path(source).resolve()
+                import os
+                if not os.path.isabs(source):
+                    resolved = output_path.parent.parent / source
+                else:
+                    resolved = Path(source).resolve()
+                    
                 if resolved.exists():
-                    posix = resolved.as_posix()
+                    posix = resolved.resolve().as_posix()
                     cut["source"] = f"file:///{posix}" if not posix.startswith("/") else f"file://{posix}"
+
+        # Convert audio and subtitles sources to file:// URIs too
+        for section in ["audio", "subtitles"]:
+            if section in props:
+                for key in ["voice", "music", "source"]:
+                    if key in props[section]:
+                        src = props[section][key]
+                        if src and isinstance(src, str) and not src.startswith(("http://", "https://", "file://")):
+                            import os
+                            res_path = output_path.parent.parent / src if not os.path.isabs(src) else Path(src).resolve()
+                            if res_path.exists():
+                                p = res_path.resolve().as_posix()
+                                props[section][key] = f"file:///{p}" if not p.startswith("/") else f"file://{p}"
 
         # Build a custom themeConfig from the playbook's actual colors.
         # This ensures every video gets a unique visual identity derived
@@ -1347,12 +1371,14 @@ class VideoCompose(BaseTool):
         renderer_family = (composition_data or {}).get("renderer_family", "explainer-data")
         composition_id = self._get_composition_id(renderer_family)
 
+        import os
+        npx_exe = "npx.cmd" if os.name == "nt" else "npx"
         cmd = [
-            "npx", "remotion", "render",
-            str(composer_dir / "src" / "index.tsx"),
+            npx_exe, "remotion", "render",
+            (composer_dir / "src" / "index.tsx").as_posix(),
             composition_id,
-            str(output_path),
-            "--props", str(props_path),
+            output_path.as_posix(),
+            "--props", str(props_path.resolve()),
         ]
 
         # Apply media profile dimensions
@@ -1366,13 +1392,12 @@ class VideoCompose(BaseTool):
                 pass
 
         try:
-            # Invoke from inside the composer dir so npx can resolve the
-            # local remotion binary via node_modules/.bin. Without this,
-            # Windows npx cannot locate the CLI and returns "could not
-            # determine executable to run".
-            self.run_command(cmd, timeout=600, cwd=composer_dir)
+            proc = subprocess.run(cmd, timeout=600, cwd=composer_dir, capture_output=True, text=True)
+            if proc.returncode != 0:
+                err_msg = proc.stderr or proc.stdout or "Unknown error"
+                return ToolResult(success=False, error=f"Remotion render failed with exit code {proc.returncode}. Output:\n{err_msg}")
         except Exception as e:
-            return ToolResult(success=False, error=f"Remotion render failed: {e}")
+            return ToolResult(success=False, error=f"Remotion render execution failed: {e}")
         finally:
             if props_path.exists():
                 props_path.unlink()
@@ -2154,12 +2179,13 @@ class VideoCompose(BaseTool):
         # Layer 2: edit_decisions subtitle style
         if edit_decisions:
             ed_style = edit_decisions.get("subtitles", {}).get("style", {})
-            for k, v in ed_style.items():
-                if v is not None:
-                    resolved[k] = v
+            if isinstance(ed_style, dict):
+                for k, v in ed_style.items():
+                    if v is not None:
+                        resolved[k] = v
 
         # Layer 3: Explicit override (highest priority)
-        if explicit_style:
+        if isinstance(explicit_style, dict):
             for k, v in explicit_style.items():
                 if v is not None:
                     resolved[k] = v

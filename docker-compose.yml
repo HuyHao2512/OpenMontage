@@ -1,0 +1,30 @@
+version: "3.8"
+
+services:
+  openmontage:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: openmontage-web
+    ports:
+      - "8000:8000"
+    env_file:
+      - .env
+    volumes:
+      # Persist projects, rendered outputs, and logs outside the container
+      - ./projects:/app/projects
+      - ./output:/app/output
+      - ./pipelines:/app/pipelines
+      - ./logs:/app/logs
+    environment:
+      - OPENMONTAGE_HOST=0.0.0.0
+      - OPENMONTAGE_PORT=8000
+      - PYTHONUNBUFFERED=1
+      - NODE_ENV=production
+    restart: unless-stopped
+    networks:
+      - openmontage-net
+
+networks:
+  openmontage-net:
+    driver: bridge

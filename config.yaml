@@ -1,8 +1,8 @@
 # OpenMontage - Global Configuration
 
 llm:
-  provider: anthropic            # anthropic | openai | gemini | openrouter | ollama | mistral | minimax
-  model: null                    # null = use provider default
+  provider: gemini               # anthropic | openai | gemini | openrouter | ollama | mistral | minimax
+  model: "gemini-3.5-flash"      # As requested by user
   temperature: 0.7
   max_tokens: 4096
 

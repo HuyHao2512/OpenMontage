@@ -1,0 +1,619 @@
+<!DOCTYPE html>
+<html lang="vi">
+<head>
+  <meta charset="UTF-8" />
+  <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+  <title>OpenMontage — Sản xuất video với AI</title>
+  <link rel="preconnect" href="https://fonts.googleapis.com">
+  <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+  <link href="https://fonts.googleapis.com/css2?family=Inter:wght@400;500;600;700;800&family=Space+Grotesk:wght@500;700&display=swap" rel="stylesheet">
+  <style>
+    :root {
+      --bg-0: #05050a;
+      --bg-1: #0b0b14;
+      --bg-2: #12121f;
+      --bg-3: #1a1a2e;
+      --text-primary: #f4f4ff;
+      --text-secondary: #9fa3b2;
+      --accent: #7c3aed;
+      --accent-2: #06b6d4;
+      --accent-3: #ec4899;
+      --success: #22c55e;
+      --warning: #f59e0b;
+      --error: #ef4444;
+      --radius-sm: 10px;
+      --radius-md: 16px;
+      --radius-lg: 24px;
+      --shadow: 0 25px 60px -12px rgba(0, 0, 0, 0.5);
+      --glow: 0 0 40px rgba(124, 58, 237, 0.35);
+    }
+
+    * { box-sizing: border-box; }
+
+    html, body {
+      margin: 0;
+      padding: 0;
+      min-height: 100%;
+      font-family: 'Inter', system-ui, sans-serif;
+      background: var(--bg-0);
+      color: var(--text-primary);
+      line-height: 1.5;
+    }
+
+    body {
+      background:
+        radial-gradient(ellipse at 20% 10%, rgba(124,58,237,0.18), transparent 45%),
+        radial-gradient(ellipse at 80% 20%, rgba(6,182,212,0.12), transparent 40%),
+        radial-gradient(ellipse at 60% 90%, rgba(236,72,153,0.10), transparent 45%),
+        var(--bg-0);
+    }
+
+    .container {
+      max-width: 1200px;
+      margin: 0 auto;
+      padding: 40px 24px 80px;
+    }
+
+    header {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      margin-bottom: 48px;
+      padding: 16px 24px;
+      border-radius: var(--radius-lg);
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      backdrop-filter: blur(16px);
+    }
+
+    .brand {
+      display: flex;
+      align-items: center;
+      gap: 14px;
+    }
+
+    .logo {
+      width: 44px;
+      height: 44px;
+      border-radius: 12px;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      display: grid;
+      place-items: center;
+      font-weight: 800;
+      font-size: 20px;
+      box-shadow: var(--glow);
+    }
+
+    .brand h1 {
+      margin: 0;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 24px;
+      letter-spacing: -0.5px;
+    }
+
+    .brand span {
+      display: block;
+      font-size: 12px;
+      font-weight: 500;
+      color: var(--text-secondary);
+    }
+
+    .status-pill {
+      display: inline-flex;
+      align-items: center;
+      gap: 8px;
+      padding: 8px 16px;
+      border-radius: 999px;
+      font-size: 13px;
+      font-weight: 600;
+      background: rgba(34,197,94,0.12);
+      color: var(--success);
+      border: 1px solid rgba(34,197,94,0.25);
+    }
+
+    .status-pill::before {
+      content: '';
+      width: 8px;
+      height: 8px;
+      border-radius: 50%;
+      background: var(--success);
+      box-shadow: 0 0 12px var(--success);
+      animation: pulse 2s infinite;
+    }
+
+    @keyframes pulse {
+      0%, 100% { opacity: 1; transform: scale(1); }
+      50% { opacity: 0.6; transform: scale(1.2); }
+    }
+
+    .hero {
+      text-align: center;
+      margin-bottom: 56px;
+    }
+
+    .hero h2 {
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: clamp(36px, 6vw, 64px);
+      line-height: 1.05;
+      margin: 0 0 18px;
+      background: linear-gradient(90deg, #fff 0%, #c4b5fd 50%, #67e8f9 100%);
+      -webkit-background-clip: text;
+      -webkit-text-fill-color: transparent;
+    }
+
+    .hero p {
+      max-width: 640px;
+      margin: 0 auto 32px;
+      color: var(--text-secondary);
+      font-size: 18px;
+    }
+
+    .grid {
+      display: grid;
+      grid-template-columns: repeat(auto-fit, minmax(320px, 1fr));
+      gap: 24px;
+    }
+
+    .card {
+      background: rgba(255,255,255,0.03);
+      border: 1px solid rgba(255,255,255,0.06);
+      border-radius: var(--radius-lg);
+      padding: 28px;
+      backdrop-filter: blur(12px);
+      box-shadow: var(--shadow);
+      transition: transform 0.25s ease, border-color 0.25s ease, box-shadow 0.25s ease;
+    }
+
+    .card:hover {
+      transform: translateY(-4px);
+      border-color: rgba(124,58,237,0.35);
+      box-shadow: var(--glow), var(--shadow);
+    }
+
+    .card h3 {
+      margin: 0 0 12px;
+      font-family: 'Space Grotesk', sans-serif;
+      font-size: 20px;
+      display: flex;
+      align-items: center;
+      gap: 10px;
+    }
+
+    .card p {
+      color: var(--text-secondary);
+      margin: 0 0 20px;
+      font-size: 14px;
+    }
+
+    .form-group {
+      margin-bottom: 18px;
+    }
+
+    label {
+      display: block;
+      font-size: 13px;
+      font-weight: 600;
+      margin-bottom: 8px;
+      color: var(--text-primary);
+    }
+
+    input, textarea, select {
+      width: 100%;
+      padding: 12px 14px;
+      border-radius: var(--radius-sm);
+      border: 1px solid rgba(255,255,255,0.10);
+      background: rgba(0,0,0,0.25);
+      color: var(--text-primary);
+      font-size: 14px;
+      outline: none;
+      transition: border-color 0.2s, box-shadow 0.2s;
+    }
+
+    input:focus, textarea:focus, select:focus {
+      border-color: var(--accent);
+      box-shadow: 0 0 0 3px rgba(124,58,237,0.15);
+    }
+
+    textarea { min-height: 92px; resize: vertical; }
+
+    .btn {
+      display: inline-flex;
+      align-items: center;
+      justify-content: center;
+      gap: 10px;
+      padding: 13px 22px;
+      border-radius: var(--radius-sm);
+      border: none;
+      font-weight: 700;
+      font-size: 14px;
+      cursor: pointer;
+      transition: transform 0.15s, filter 0.15s;
+    }
+
+    .btn-primary {
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+      box-shadow: 0 8px 28px rgba(124,58,237,0.35);
+    }
+
+    .btn-primary:hover { filter: brightness(1.1); transform: translateY(-1px); }
+    .btn-primary:disabled { opacity: 0.6; cursor: not-allowed; transform: none; filter: none; }
+
+    .btn-secondary {
+      background: rgba(255,255,255,0.06);
+      color: var(--text-primary);
+      border: 1px solid rgba(255,255,255,0.10);
+    }
+
+    .btn-secondary:hover { background: rgba(255,255,255,0.10); }
+
+    .actions { display: flex; gap: 12px; flex-wrap: wrap; }
+
+    .capabilities {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 10px;
+      margin-top: 16px;
+    }
+
+    .chip {
+      padding: 6px 12px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--text-secondary);
+    }
+
+    .chip.ok { color: var(--success); border-color: rgba(34,197,94,0.25); background: rgba(34,197,94,0.08); }
+    .chip.warn { color: var(--warning); border-color: rgba(245,158,11,0.25); background: rgba(245,158,11,0.08); }
+    .chip.error { color: var(--error); border-color: rgba(239,68,68,0.25); background: rgba(239,68,68,0.08); }
+
+    .toast {
+      position: fixed;
+      bottom: 24px;
+      right: 24px;
+      padding: 16px 20px;
+      border-radius: var(--radius-md);
+      background: var(--bg-2);
+      border: 1px solid rgba(255,255,255,0.08);
+      box-shadow: var(--shadow);
+      max-width: 420px;
+      transform: translateY(120%);
+      transition: transform 0.35s cubic-bezier(0.16, 1, 0.3, 1);
+      z-index: 100;
+    }
+
+    .toast.show { transform: translateY(0); }
+    .toast.error { border-color: rgba(239,68,68,0.35); color: #fecaca; }
+    .toast.success { border-color: rgba(34,197,94,0.35); color: #bbf7d0; }
+
+    .spinner {
+      width: 18px;
+      height: 18px;
+      border: 2px solid rgba(255,255,255,0.25);
+      border-top-color: #fff;
+      border-radius: 50%;
+      animation: spin 0.8s linear infinite;
+    }
+
+    @keyframes spin { to { transform: rotate(360deg); } }
+
+    .project-list {
+      display: grid;
+      gap: 14px;
+      margin-top: 18px;
+    }
+
+    .project-item {
+      display: flex;
+      align-items: center;
+      justify-content: space-between;
+      padding: 16px 18px;
+      border-radius: var(--radius-sm);
+      background: rgba(0,0,0,0.20);
+      border: 1px solid rgba(255,255,255,0.05);
+      cursor: pointer;
+      transition: background 0.2s, border-color 0.2s;
+    }
+
+    .project-item:hover {
+      background: rgba(255,255,255,0.04);
+      border-color: rgba(124,58,237,0.30);
+    }
+
+    .project-item strong { font-weight: 600; display: block; }
+    .project-item small { color: var(--text-secondary); font-size: 12px; }
+
+    .hidden { display: none !important; }
+
+    .json-preview {
+      font-family: ui-monospace, 'SFMono-Regular', Menlo, Consolas, monospace;
+      font-size: 12px;
+      max-height: 260px;
+      overflow: auto;
+      background: rgba(0,0,0,0.35);
+      border-radius: var(--radius-sm);
+      padding: 14px;
+      white-space: pre-wrap;
+      color: #d4d4d8;
+      border: 1px solid rgba(255,255,255,0.06);
+    }
+
+    footer {
+      margin-top: 80px;
+      text-align: center;
+      color: var(--text-secondary);
+      font-size: 13px;
+    }
+
+    .chat-box {
+      height: 320px;
+      overflow-y: auto;
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.08);
+      border-radius: var(--radius-md);
+      padding: 16px;
+      display: flex;
+      flex-direction: column;
+      gap: 12px;
+    }
+
+    .chat-welcome {
+      color: var(--text-secondary);
+      font-size: 13px;
+      padding: 12px 14px;
+      background: rgba(255,255,255,0.04);
+      border-radius: var(--radius-sm);
+      border: 1px dashed rgba(255,255,255,0.08);
+    }
+
+    .chat-message {
+      max-width: 88%;
+      padding: 12px 14px;
+      border-radius: var(--radius-md);
+      font-size: 14px;
+      line-height: 1.45;
+      animation: fadeIn 0.25s ease;
+    }
+
+    .chat-message.user {
+      align-self: flex-end;
+      background: linear-gradient(135deg, var(--accent), var(--accent-2));
+      color: #fff;
+      border-bottom-right-radius: 4px;
+    }
+
+    .chat-message.assistant {
+      align-self: flex-start;
+      background: rgba(255,255,255,0.07);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--text-primary);
+      border-bottom-left-radius: 4px;
+    }
+
+    @keyframes fadeIn {
+      from { opacity: 0; transform: translateY(6px); }
+      to { opacity: 1; transform: translateY(0); }
+    }
+
+    .chat-input-row {
+      display: flex;
+      gap: 10px;
+      margin-top: 12px;
+    }
+
+    .chat-input-row input {
+      flex: 1;
+    }
+
+    .progress-panel {
+      margin-top: 18px;
+      padding: 16px;
+      border-radius: var(--radius-md);
+      background: rgba(0,0,0,0.25);
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .progress-header {
+      font-weight: 700;
+      font-size: 13px;
+      margin-bottom: 12px;
+      color: var(--text-primary);
+    }
+
+    .progress-steps {
+      display: flex;
+      gap: 8px;
+      flex-wrap: wrap;
+      margin-bottom: 10px;
+    }
+
+    .progress-step {
+      padding: 6px 10px;
+      border-radius: 999px;
+      font-size: 12px;
+      font-weight: 600;
+      background: rgba(255,255,255,0.05);
+      border: 1px solid rgba(255,255,255,0.08);
+      color: var(--text-secondary);
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+    }
+
+    .progress-step.running {
+      color: var(--accent-2);
+      border-color: rgba(6,182,212,0.35);
+      background: rgba(6,182,212,0.08);
+    }
+
+    .progress-step.completed {
+      color: var(--success);
+      border-color: rgba(34,197,94,0.35);
+      background: rgba(34,197,94,0.08);
+    }
+
+    .progress-step.failed {
+      color: var(--error);
+      border-color: rgba(239,68,68,0.35);
+      background: rgba(239,68,68,0.08);
+    }
+
+    .progress-status {
+      font-size: 13px;
+      color: var(--text-secondary);
+    }
+
+    .video-wrapper {
+      aspect-ratio: 16 / 9;
+      background: rgba(0,0,0,0.35);
+      border-radius: var(--radius-md);
+      display: grid;
+      place-items: center;
+      overflow: hidden;
+      border: 1px solid rgba(255,255,255,0.08);
+    }
+
+    .video-wrapper video {
+      width: 100%;
+      height: 100%;
+      object-fit: contain;
+    }
+
+    .video-placeholder {
+      color: var(--text-secondary);
+      font-size: 14px;
+      text-align: center;
+      padding: 24px;
+    }
+
+    @media (max-width: 900px) {
+      #chatCard { grid-column: span 1 !important; }
+    }
+
+    @media (max-width: 640px) {
+      header { flex-direction: column; gap: 16px; align-items: flex-start; }
+      .grid { grid-template-columns: 1fr; }
+      .chat-input-row { flex-direction: column; }
+    }
+  </style>
+</head>
+<body>
+  <div class="container">
+    <header>
+      <div class="brand">
+        <div class="logo">OM</div>
+        <div>
+          <h1>OpenMontage</h1>
+          <span>Sản xuất video đa năng với AI</span>
+        </div>
+      </div>
+      <div class="status-pill" id="serverStatus">Đang kiểm tra…</div>
+    </header>
+
+    <section class="hero">
+      <h2>Tạo video từ ý tưởng chỉ trong vài phút</h2>
+      <p>Chọn pipeline, mô tả nội dung, phê duyệt kế hoạch và theo dõi tiến trình render — tất cả trong một giao diện duy nhất.</p>
+    </section>
+
+    <div class="grid">
+      <section class="card">
+        <h3>📊 Khả năng hệ thống</h3>
+        <p>Kiểm tra công cụ và runtime sẵn sàng (Preflight) trước khi tạo dự án.</p>
+        <div class="actions">
+          <button class="btn btn-secondary" id="btnPreflight" onclick="loadPreflight()">Chạy Preflight</button>
+        </div>
+        <div id="preflightResult" class="capabilities"></div>
+      </section>
+
+      <section class="card hidden">
+        <h3>🎬 Tạo dự án mới</h3>
+        <p>Khởi tạo dự án video, chọn pipeline và gửi brief để bắt đầu.</p>
+        <div class="form-group">
+          <label for="projectTitle">Tên dự án</label>
+          <input id="projectTitle" placeholder="Ví dụ: Giới thiệu văn hóa Óc Eo" />
+        </div>
+        <div class="form-group">
+          <label for="pipelineSelect">Pipeline</label>
+          <select id="pipelineSelect"></select>
+        </div>
+        <div class="form-group">
+          <label for="projectBrief">Brief / mô tả</label>
+          <textarea id="projectBrief" placeholder="Mô tả nội dung, đối tượng, thời lượng, ngôn ngữ…"></textarea>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" id="btnCreate" onclick="createProject()">
+            <span>Tạo dự án</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3>📁 Dự án của bạn</h3>
+        <p>Danh sách các dự án đã tạo trong workspace.</p>
+        <div class="actions">
+          <button class="btn btn-secondary" onclick="loadProjects()">Làm mới</button>
+        </div>
+        <div id="projectList" class="project-list"></div>
+      </section>
+
+      <section class="card" id="chatCard" style="grid-column: span 2;">
+        <h3>💬 Trò chuyện với OpenMontage</h3>
+        <p>Mô tả ý tưởng, tinh chỉnh kế hoạch, rồi nhấn <strong>Tạo video ngay</strong> để tự động sản xuất.</p>
+        <div class="form-group">
+          <label for="chatProjectSelect">Dự án đang làm việc</label>
+          <select id="chatProjectSelect">
+            <option value="">Chưa chọn dự án</option>
+          </select>
+        </div>
+        <div id="chatBox" class="chat-box">
+          <div class="chat-welcome">
+            👋 Hãy mô tả ý tưởng video của bạn. Ví dụ: “Tạo video 60 giây giới thiệu văn hóa Óc Eo bằng tiếng Việt.”
+          </div>
+        </div>
+        <div class="chat-input-row">
+          <input id="chatInput" type="text" placeholder="Nhập ý tưởng hoặc yêu cầu…" autocomplete="off" />
+          <button class="btn btn-primary" id="btnChatSend" onclick="sendChatMessage()">
+            <span>Gửi</span>
+          </button>
+        </div>
+        <div class="actions" style="margin-top: 14px;">
+          <button class="btn btn-primary" id="btnQuickGenerate" onclick="quickGenerate()" disabled>
+            <span class="spinner hidden" id="btnQuickGenerateSpinner"></span>
+            <span>⚡ Tạo video ngay</span>
+          </button>
+          <button class="btn btn-secondary" onclick="refreshChatProjects()">Làm mới dự án</button>
+        </div>
+        <div id="generationProgress" class="progress-panel hidden">
+          <div class="progress-header">Tiến trình tạo video</div>
+          <div id="progressSteps" class="progress-steps"></div>
+          <div id="progressStatus" class="progress-status">Đang chờ…</div>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3>▶️ Xem trước video</h3>
+        <p>Video hoàn thành sẽ xuất hiện bên dưới.</p>
+        <div id="videoPreviewWrapper" class="video-wrapper">
+          <video id="videoPreview" controls poster="" class="hidden"></video>
+          <div id="videoPlaceholder" class="video-placeholder">Chưa có video</div>
+        </div>
+        <div class="actions" style="margin-top: 14px;">
+          <a id="videoDownloadLink" class="btn btn-secondary hidden" download>Tải video</a>
+          <button class="btn btn-secondary" onclick="refreshPreview()">Làm mới</button>
+        </div>
+      </section>
+    </div>
+
+    <footer>
+      OpenMontage Web UI · Deploy sẵn sàng qua Docker · <span id="versionInfo">…</span>
+    </footer>
+  </div>
+
+  <div id="toast" class="toast"></div>
+
+  <script src="/static/app.js?v=3"></script>
+</body>
+</html>

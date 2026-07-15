@@ -250,18 +250,36 @@ class HyperFramesCompose(BaseTool):
     def _resolve_npm_package(cls) -> dict[str, str]:
         """Verify the `hyperframes` npm package actually resolves.
 
-        `_runtime_check` previously only verified that node/ffmpeg/npx existed
-        on PATH, which meant `runtime_available: True` on any machine with
-        Node + FFmpeg — even offline, even if npm was down, even if the
-        package was unpublished. This method performs a cheap
-        `npm view hyperframes version` (5s timeout) and caches the answer
-        for the rest of the process.
+        First checks whether the `hyperframes` CLI binary is already available
+        on PATH (e.g. from a global install in the Docker image). If so, it
+        returns the version reported by `hyperframes --version` without
+        contacting the registry. Only if the binary is missing does it fall
+        back to `npm view hyperframes version` (5s timeout) for environments
+        where the package will be fetched on demand via npx.
 
         Returns {"version": "X.Y.Z"} on success, {"error": "<short>"} on any
         failure (404, timeout, network error, npm missing). Never raises.
         """
         if cls._npm_resolve_cache is not None:
             return cls._npm_resolve_cache
+
+        # Fast path: a globally/local binary is already installed and executable.
+        hf_bin = shutil.which("hyperframes")
+        if hf_bin:
+            try:
+                out = subprocess.run(
+                    [hf_bin, "--version"],
+                    capture_output=True,
+                    text=True,
+                    timeout=5,
+                )
+                if out.returncode == 0:
+                    version = (out.stdout or "").strip()
+                    if version:
+                        cls._npm_resolve_cache = {"version": version}
+                        return cls._npm_resolve_cache
+            except (OSError, subprocess.SubprocessError, subprocess.TimeoutExpired):
+                pass
 
         npm = shutil.which("npm")
         if not npm:

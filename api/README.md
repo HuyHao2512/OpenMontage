@@ -26,6 +26,17 @@ mcp run api/mcp_server.py
 
 > **Note:** The server discovers and probes the OpenMontage tool registry once at startup. The first launch can take 30–60 seconds depending on installed providers (it probes npm, Python packages, and environment variables). Subsequent tool calls are fast.
 
+## Web UI (FastAPI)
+
+A browser dashboard is also available via `api/web_server.py`.
+
+```bash
+pip install fastapi uvicorn python-multipart
+python -m uvicorn api.web_server:app --host 0.0.0.0 --port 8000
+```
+
+Open http://localhost:8000 for the dashboard. See [DEPLOY.md](../DEPLOY.md) for Docker Compose deployment.
+
 ## Configure in Claude Desktop
 
 Add to your Claude Desktop config (`claude_desktop_config.json`):
