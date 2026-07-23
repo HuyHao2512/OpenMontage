@@ -519,46 +519,6 @@
     </section>
 
     <div class="grid">
-      <section class="card">
-        <h3>📊 Khả năng hệ thống</h3>
-        <p>Kiểm tra công cụ và runtime sẵn sàng (Preflight) trước khi tạo dự án.</p>
-        <div class="actions">
-          <button class="btn btn-secondary" id="btnPreflight" onclick="loadPreflight()">Chạy Preflight</button>
-        </div>
-        <div id="preflightResult" class="capabilities"></div>
-      </section>
-
-      <section class="card hidden">
-        <h3>🎬 Tạo dự án mới</h3>
-        <p>Khởi tạo dự án video, chọn pipeline và gửi brief để bắt đầu.</p>
-        <div class="form-group">
-          <label for="projectTitle">Tên dự án</label>
-          <input id="projectTitle" placeholder="Ví dụ: Giới thiệu văn hóa Óc Eo" />
-        </div>
-        <div class="form-group">
-          <label for="pipelineSelect">Pipeline</label>
-          <select id="pipelineSelect"></select>
-        </div>
-        <div class="form-group">
-          <label for="projectBrief">Brief / mô tả</label>
-          <textarea id="projectBrief" placeholder="Mô tả nội dung, đối tượng, thời lượng, ngôn ngữ…"></textarea>
-        </div>
-        <div class="actions">
-          <button class="btn btn-primary" id="btnCreate" onclick="createProject()">
-            <span>Tạo dự án</span>
-          </button>
-        </div>
-      </section>
-
-      <section class="card">
-        <h3>📁 Dự án của bạn</h3>
-        <p>Danh sách các dự án đã tạo trong workspace.</p>
-        <div class="actions">
-          <button class="btn btn-secondary" onclick="loadProjects()">Làm mới</button>
-        </div>
-        <div id="projectList" class="project-list"></div>
-      </section>
-
       <section class="card" id="chatCard" style="grid-column: span 2;">
         <h3>💬 Trò chuyện với OpenMontage</h3>
         <p>Mô tả ý tưởng, tinh chỉnh kế hoạch, rồi nhấn <strong>Tạo video ngay</strong> để tự động sản xuất.</p>
@@ -605,6 +565,50 @@
           <button class="btn btn-secondary" onclick="refreshPreview()">Làm mới</button>
         </div>
       </section>
+
+      <section class="card">
+        <h3>📊 Khả năng hệ thống</h3>
+        <p>Kiểm tra công cụ và runtime sẵn sàng (Preflight) trước khi tạo dự án.</p>
+        <div class="actions">
+          <button class="btn btn-secondary" id="btnPreflight" onclick="loadPreflight()">Chạy Preflight</button>
+        </div>
+        <div id="preflightResult" class="capabilities"></div>
+      </section>
+
+      <section class="card hidden">
+        <h3>🎬 Tạo dự án mới</h3>
+        <p>Khởi tạo dự án video, chọn pipeline và gửi brief để bắt đầu.</p>
+        <div class="form-group">
+          <label for="projectTitle">Tên dự án</label>
+          <input id="projectTitle" placeholder="Ví dụ: Giới thiệu văn hóa Óc Eo" />
+        </div>
+        <div class="form-group">
+          <label for="pipelineSelect">Pipeline</label>
+          <select id="pipelineSelect"></select>
+        </div>
+        <div class="form-group">
+          <label for="projectBrief">Brief / mô tả</label>
+          <textarea id="projectBrief" placeholder="Mô tả nội dung, đối tượng, thời lượng, ngôn ngữ…"></textarea>
+        </div>
+        <div class="actions">
+          <button class="btn btn-primary" id="btnCreate" onclick="createProject()">
+            <span>Tạo dự án</span>
+          </button>
+        </div>
+      </section>
+
+      <section class="card">
+        <h3>📁 Dự án của bạn</h3>
+        <p>Danh sách các dự án đã tạo trong workspace.</p>
+        <div class="actions">
+          <button class="btn btn-secondary" onclick="loadProjects()">Làm mới</button>
+        </div>
+        <div id="projectList" class="project-list"></div>
+      </section>
+
+      
+
+      
     </div>
 
     <footer>

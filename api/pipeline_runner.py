@@ -511,7 +511,25 @@ def _generate_asset_manifest(
 
 def _generate_narration_audio(text: str, output_path: str, language: str) -> None:
     """Best-effort narration audio. Falls back to ffmpeg silence on any failure."""
-    # Try OpenAI TTS if key is available.
+    
+    # 1. Try LucyLab TTS first (Default voice for OpenMontage)
+    if os.environ.get("LUCYLAB_API_KEY"):
+        try:
+            registry.ensure_discovered("tools")
+            tool = registry.get_tool("lucylab_tts")
+            if tool is not None:
+                result = tool.execute({
+                    "text": text,
+                    "output_path": output_path,
+                    "voice": "7Tb4dvGZyJMPjnnfxVBgik", # Lucylab default voice ID
+                    "speed": 1.0,
+                })
+                if result.success:
+                    return
+        except Exception as exc:
+            log.warning("lucylab_tts failed, falling back to openai_tts: %s", exc)
+
+    # 2. Try OpenAI TTS if LucyLab fails or key is missing
     if os.environ.get("OPENAI_API_KEY"):
         try:
             registry.ensure_discovered("tools")
@@ -1243,41 +1261,20 @@ def chat_message(
     history = history or []
     lower = message.lower()
 
-    # Simple intent detection (Vietnamese + English)
-    generation_triggers = [
-        "tạo video", "làm video", "render", "generate video", "make video",
-        "bắt đầu sản xuất", "xuất video", "chạy pipeline", "run pipeline",
-    ]
-    approve_triggers = [
-        "đồng ý", "phê duyệt", "approve", "chấp nhận", "tiếp tục đi",
-    ]
-
-    if any(t in lower for t in approve_triggers):
-        return {"reply": "Đã ghi nhận phê duyệt. Tôi sẽ chạy pipeline ngay.", "intent": "approve"}
-
-    if any(t in lower for t in generation_triggers):
-        # Try to pull brief from the current message or history.
-        brief = message
-        for m in reversed(history):
-            if m.get("role") == "user" and not any(t in m.get("content", "").lower() for t in generation_triggers):
-                brief = m["content"]
-                break
-        return {
-            "reply": "Đã hiểu. Tôi sẽ tự động chạy toàn bộ pipeline để tạo video từ ý tưởng này.",
-            "intent": "generate",
-            "args": {"brief": brief},
-        }
+    # Bỏ qua hardcode triggers để LLM thực sự có cơ hội trò chuyện và gợi ý.
+    # Người dùng sẽ dùng nút Generate trên UI sau khi chốt ý tưởng.
 
     # General chat: answer with LLM
     system = (
-        "Bạn là Đạo diễn Video AI của OpenMontage. Khách hàng đang có ý tưởng làm video. "
-        "NHIỆM VỤ CỦA BẠN: KHÔNG tạo video ngay nếu ý tưởng còn quá chung chung. "
-        "1. Hãy CHỦ ĐỘNG HỎI THÊM chi tiết (VD: đối tượng khán giả, phong cách, thời lượng). "
-        "2. Dựa vào ý tưởng, hãy GỢI Ý cho khách hàng chọn dạng video phù hợp nhất. Ví dụ: "
-        "- Dạng Motion Graphics (dùng Hyperframes/Remotion): Phù hợp video giải thích, đồ họa đẹp, infographic. "
-        "- Dạng Phim tài liệu/Thực tế (dùng Stock Video/Pexels): Phù hợp video du lịch, phong cảnh, trải nghiệm thực. "
-        "Hỏi khách hàng xem họ muốn làm theo dạng nào. Trả lời bằng tiếng Việt, thân thiện và chuyên nghiệp. "
-        "Khi đã chốt được nội dung và dạng video, hãy mời người dùng chọn đúng Pipeline trên giao diện (ví dụ Animated Explainer hoặc Cinematic) và bấm nút 'Tạo video ngay'."
+        "Bạn là Đạo diễn Video AI cao cấp của nền tảng OpenMontage, một trợ lý thông minh như một IDE agent dành cho sáng tạo nội dung. "
+        "NHIỆM VỤ CỦA BẠN: KHÔNG bao giờ đồng ý làm video ngay với một câu lệnh ngắn gọn. Bạn phải dẫn dắt người dùng để khai thác tối đa tiềm năng của video. "
+        "1. KHAI THÁC & ĐỀ XUẤT (Proactive Suggestion): Dựa vào ý tưởng cơ bản, hãy đề xuất ngay 1-2 hướng phát triển (ví dụ: phong cách kể chuyện (narrative), nhịp độ video (fast-paced vs chill), mood (cảm xúc). "
+        "2. TƯ VẤN CÔNG NGHỆ: Giới thiệu 2 luồng công nghệ của OpenMontage một cách tự nhiên: "
+        "   - 'Animated Explainer' (Remotion/Motion Graphics): Nếu chủ đề cần truyền đạt kiến thức, số liệu, hướng dẫn, đồ họa UI. "
+        "   - 'Cinematic' (Pexels/Stock Footage): Nếu chủ đề cần cảm xúc, du lịch, phong cảnh, trải nghiệm thực tế. "
+        "3. TƯ VẤN ÂM THANH: Đề xuất kiểu nhạc nền (BGM) và giọng đọc (Voice AI) phù hợp với mood của video. "
+        "Luôn trả lời bằng tiếng Việt, phong cách thông minh, sắc bén, chuyên nghiệp và đầy tính gợi mở (tương tự một chuyên gia Creative Director). "
+        "Khi đã chốt xong mọi thứ, hãy nhắc người dùng chọn Pipeline phù hợp trên giao diện và nhấn nút 'Tạo video ngay' (Generate)."
     )
     messages = [{"role": "system", "content": system}]
     for h in history[-6:]:

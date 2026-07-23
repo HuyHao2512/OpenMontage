@@ -160,7 +160,15 @@ function addChatMessage(role, text) {
   if (welcome) welcome.remove();
   const div = document.createElement('div');
   div.className = `chat-message ${role}`;
-  div.textContent = text;
+  // Parse markdown cơ bản (*in đậm*, xuống dòng)
+  let html = text
+    .replace(/&/g, "&amp;")
+    .replace(/</g, "&lt;")
+    .replace(/>/g, "&gt;")
+    .replace(/\*\*(.*?)\*\*/g, '<strong>$1</strong>')
+    .replace(/\*(.*?)\*/g, '<em>$1</em>')
+    .replace(/\n/g, '<br>');
+  div.innerHTML = html;
   box.appendChild(div);
   box.scrollTop = box.scrollHeight;
 }
